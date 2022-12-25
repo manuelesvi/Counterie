@@ -6,9 +6,10 @@ namespace MauiApp3;
 public partial class MainPage : ContentPage
 {
 	int count = 0;
+    bool isStarted;
     readonly SpeechSynthesizer synthesizer = new SpeechSynthesizer();
     readonly VoiceInfo selectedVI;
-    readonly Timer countTimer = new Timer(2000);
+    readonly Timer countTimer = new Timer(3300);
 
     public MainPage()
 	{
@@ -34,7 +35,36 @@ Appuyez sur les boutons pour écouter les chiffres en français");
 
     private void SayText(string text)
     {
-        synthesizer.SpeakAsync(CustomEntry.Text);
+#pragma warning disable CA1416 // Validate platform compatibility
+        synthesizer.SpeakAsync(text);
+#pragma warning restore CA1416 // Validate platform compatibility
+    }
+
+    private void Reset()
+    {
+        if (int.TryParse(ResetEntry.Text,
+                        NumberStyles.Integer, null, out int newCount))
+        {
+            count = newCount;
+            SayNumber();
+        }
+    }
+
+    private void StartCounter()
+    {
+        countTimer.Start();
+        // TODO: Change UI to pause
+        PlayBtn.Text = "\u23F8";
+        PlayBtn.BackgroundColor = Colors.Yellow;
+        isStarted = true;
+    }
+
+    private void StopCounter()
+    {
+        countTimer.Stop();
+        isStarted = false;
+        PlayBtn.Text = "\u23F5";
+        PlayBtn.BackgroundColor = Colors.Green;
     }
 
     private void SayBtn_Clicked(object sender, EventArgs e)
@@ -96,25 +126,25 @@ Appuyez sur les boutons pour écouter les chiffres en français");
         Reset();
     }
 
-    private void Reset()
-    {
-        if (int.TryParse(ResetEntry.Text,
-                        NumberStyles.Integer, null, out int newCount))
-        {
-            count = newCount;
-            SayNumber();
-        }
-    }
-
     private void PlayBtn_Clicked(object sender, EventArgs e)
-    {        
-        countTimer.Start();
-        // TODO: Change UI to pause
+    {
+        if (isStarted)
+        {
+            // pause (count remains same)
+            StopCounter();
+        } 
+        else
+        {
+            StartCounter();
+        }
     }
 
     private void StopBtn_Clicked(object sender, EventArgs e)
     {
-        countTimer.Stop();
+        StopCounter();
+
+        count = 0;
+        SayNumber();
         // TODO: Change UI to play
     }
 }
