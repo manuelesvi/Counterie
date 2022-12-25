@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiApp3.MainPage">
+
+    <ScrollView>
+        <VerticalStackLayout>
+            <Grid ColumnDefinitions="*" RowDefinitions="*,Auto,Auto"
+                  RowSpacing="25" Padding="10,30">
+                <Label x:Name="SpeakingLbl" 
+                       FontSize="Title" FontAttributes="Bold"
+                       HorizontalOptions="Center" />
+                <HorizontalStackLayout
+                    HorizontalOptions="Center"
+                    Spacing="10"
+                    Grid.Row="1" 
+                    Grid.Column="0">
+                    <Entry x:Name="ResetEntry" 
+                           Completed="ResetEntry_Completed"
+                           MinimumWidthRequest="85"/>
+                    <Button x:Name="ResetBtn" Text="Reset" 
+                            Clicked="ResetBtn_Clicked" />
+
+                    <Entry x:Name="CustomEntry"
+                           Completed="CustomEntry_Completed"
+                           MinimumWidthRequest="250" />
+                    <Button x:Name="SayBtn" Text="Say It" 
+                            Clicked="SayBtn_Clicked"/>
+                </HorizontalStackLayout>
+
+                <HorizontalStackLayout 
+                    Grid.Row="2" Grid.Column="0"
+                    HorizontalOptions="Center">
+                    <Button x:Name="LessBtn"
+                        Text="-"
+                        FontSize="Header"
+                        FontAttributes="Bold"
+                        SemanticProperties.Hint="Reduces 1 step the button counter"
+                        WidthRequest="50"
+                        Clicked="LessBtn_Clicked"
+                        />
+                    <Button
+                    x:Name="CounterBtn"
+                    Text="Counting"
+                    SemanticProperties.Hint="Counts the number of times you click"
+                    Clicked="OnCounterClicked"
+                    HorizontalOptions="Center" />
+
+                    <Button x:Name="MoreBtn"
+                        Text="+"
+                        FontSize="Header"
+                        FontAttributes="Bold"
+                        SemanticProperties.Hint="Increases 1 step the button counter"
+                        WidthRequest="50"
+                        Clicked="MoreBtn_Clicked"
+                        />
+
+                    <Button x:Name="PlayBtn"
+                            Text="&#x23F5;"
+                            FontSize="Header"
+                            BackgroundColor="Green"
+                            TextColor="White" 
+                            Clicked="PlayBtn_Clicked"/>
+                    
+                    <Button x:Name="StopBtn"
+                            Text="&#x23F9;"
+                            FontSize="Header"
+                            TextColor="Black"
+                            BackgroundColor="Red" 
+                            Clicked="StopBtn_Clicked"/>
+                </HorizontalStackLayout>
+            </Grid>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
