@@ -49,6 +49,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Humanizer.Core" Version="2.14.1" />
 	  <PackageReference Include="System.Speech" Version="7.0.0" />
 	</ItemGroup>
 

@@ -5,11 +5,17 @@
 
     <ScrollView>
         <VerticalStackLayout>
-            <Grid ColumnDefinitions="*" RowDefinitions="*,Auto,Auto"
+            <Grid ColumnDefinitions="*" RowDefinitions="*,Auto,Auto,Auto"
                   RowSpacing="25" Padding="10,30">
-                <Label x:Name="SpeakingLbl" 
-                       FontSize="Title" FontAttributes="Bold"
-                       HorizontalOptions="Center" />
+                <VerticalStackLayout Grid.Row="0">
+                    <Label x:Name="SpeakingLbl" 
+                           FontSize="Title" FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                    <Label x:Name="NumberLbl"
+                           FontSize="Title" FontAttributes="Bold"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                
                 <HorizontalStackLayout
                     HorizontalOptions="Center"
                     Spacing="10"
@@ -26,6 +32,9 @@
                            MinimumWidthRequest="250" />
                     <Button x:Name="SayBtn" Text="Say It" 
                             Clicked="SayBtn_Clicked"/>
+
+                    <Button x:Name="SayWelcome" Text="Welcome"
+                            Clicked="SayWelcome_Clicked" />
                 </HorizontalStackLayout>
 
                 <HorizontalStackLayout 
@@ -52,8 +61,7 @@
                         FontAttributes="Bold"
                         SemanticProperties.Hint="Increases 1 step the button counter"
                         WidthRequest="50"
-                        Clicked="MoreBtn_Clicked"
-                        />
+                        Clicked="MoreBtn_Clicked" />
 
                     <Button x:Name="PlayBtn"
                             Text="&#x23F5;"
@@ -68,6 +76,15 @@
                             TextColor="Black"
                             BackgroundColor="Red" 
                             Clicked="StopBtn_Clicked"/>
+                </HorizontalStackLayout>
+
+                <HorizontalStackLayout Grid.Row="3" Grid.Column="0" 
+                                       HorizontalOptions="Center" 
+                                       Spacing="10">
+                    <Label Text="Select Voice: " VerticalOptions="Center" />
+                    <Picker x:Name="VoicesPck" 
+                            SelectedIndexChanged="VoicesPck_SelectedIndexChanged">                        
+                    </Picker>
                 </HorizontalStackLayout>
             </Grid>
         </VerticalStackLayout>
