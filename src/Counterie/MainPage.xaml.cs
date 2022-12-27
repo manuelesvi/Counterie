@@ -8,20 +8,51 @@ namespace MauiApp3;
 
 public partial class MainPage : ContentPage
 {
-    int count = 0;
-    bool isStarted;
-    readonly SpeechSynthesizer synthesizer = new SpeechSynthesizer();
-    VoiceInfo selectedVI;
-    readonly Timer countTimer = new Timer(4000);
     static int steps = 0;
     static readonly CultureInfo _frCI = CultureInfo.GetCultureInfo("fr-FR");
+
+    int count = 0;
+    bool isStarted;
+    readonly SpeechSynthesizer synthesizer = new();
+    readonly Timer countTimer = new(4250); // 4.25s
+    VoiceInfo selectedVI;
 
     public MainPage()
     {
         InitializeComponent();
+        LoadVoices();
 
+        synthesizer.SpeakProgress += (s, e) =>
+        {
+            SpeakingLbl.Text = e.Text;
+        };
+
+        Loaded += (s, e) => Welcome();
+    }
+    
+    private void Welcome()
+    {
+        string message = selectedVI.Culture.TwoLetterISOLanguageName switch
+        {
+            "en" => @"Welcome, I am talking with Microsoft's text to speech technology.
+Press the lower buttons to hear numbers in english",
+
+            "es" => @"Bienvenido, hablo con tecnología de texto a voz de Microsoft.
+Presiona los botones inferiores para oir los números en español",
+
+            "fr" or _ => @"
+Bonjour tout le monde, 
+parlant via la technologie de voix au texte de Microsoft.
+Appuyez sur les boutons pour écouter les chiffres en français",
+        };
+
+        synthesizer.SpeakAsync(message);
+    }
+
+    private void LoadVoices()
+    {
         synthesizer.SelectVoiceByHints(VoiceGender.NotSet,
-            VoiceAge.NotSet, 0, _frCI);
+                    VoiceAge.NotSet, 0, _frCI);
         selectedVI = synthesizer.Voice;
 
         var voices = synthesizer.GetInstalledVoices();
@@ -45,94 +76,6 @@ public partial class MainPage : ContentPage
         }
 
         VoicesPck.SelectedIndex = index;
-
-        synthesizer.SpeakProgress += (s, e) =>
-        {
-            SpeakingLbl.Text = e.Text;
-        };
-
-        Loaded += (s, e) => Welcome();
-    }
-
-    private void Welcome()
-    {
-        string message = selectedVI.Culture.TwoLetterISOLanguageName switch {
-            "en" => @"Welcome, I am talking with Microsoft's text to speech technology.
-Press the lower buttons to hear numbers in english",
-            
-            "es" => @"Bienvenido, hablo con tecnología de texto a voz de Microsoft.
-Presiona los botones inferiores para oir los números en español",
-
-            "fr" or _ => @"
-Bonjour tout le monde, 
-parlant via la technologie de voix au texte de Microsoft.
-Appuyez sur les boutons pour écouter les chiffres en français",
-        };
-
-        synthesizer.SpeakAsync(message);
-    }
-
-    private void CountTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-    {
-        Interlocked.Increment(ref count);
-        var builder = SayNumber(PromptBreak.Medium, false, false);
-        SayNumber(builder, PromptBreak.None, true, true);
-
-#if DEBUG
-        Interlocked.Increment(ref steps);
-        Debug.WriteLine($"Step {steps}, counter = {count}");
-#endif
-    }
-
-    private void SayText(string text)
-    {
-        synthesizer.SpeakAsync(text);
-    }
-
-    private void Reset()
-    {
-        if (int.TryParse(ResetEntry.Text,
-                        NumberStyles.Integer,
-                        null, out int newCount))
-        {
-            count = newCount;
-            SayNumber();
-        }
-    }
-
-    private void StartCounter()
-    {
-        countTimer.Elapsed += CountTimer_Elapsed;
-        countTimer.Start();
-        isStarted = true;
-        PlayBtn.Text = "\u23F8"; // pause
-        PlayBtn.BackgroundColor = Colors.Yellow;
-    }
-
-    private void StopCounter()
-    {
-        countTimer.Elapsed -= CountTimer_Elapsed;
-        countTimer.Stop();
-        isStarted = false;
-        Interlocked.Exchange(ref steps, 0);
-        PlayBtn.Text = "\u23F5"; // play
-        PlayBtn.BackgroundColor = Colors.Green;
-    }
-
-    private void SayBtn_Clicked(object sender, EventArgs e)
-    {
-        SayText(CustomEntry.Text);
-    }
-
-    private void CustomEntry_Completed(object sender, EventArgs e)
-    {
-        SayText(CustomEntry.Text);
-    }
-
-    private void OnCounterClicked(object sender, EventArgs e)
-    {
-        SayNumber();
-        // from template: SemanticScreenReader.Announce(CounterBtn.Text);
     }
 
     private PromptBuilder SayNumber(
@@ -159,7 +102,7 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         int presentCount = count; // pass a copy
 
         string inWords = count.ToWords(selectedVI.Culture);
-        Dispatcher.Dispatch(() => 
+        Dispatcher.Dispatch(() =>
         {
             NumberLbl.Text = inWords; // humanized :D
             CounterBtn.Text = $"{count.ToString("n0")}";
@@ -179,6 +122,70 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         }
 
         return builder;
+    }
+
+    private void SayText(string text) => synthesizer.SpeakAsync(text);
+        
+    private void StartCounter()
+    {
+        countTimer.Elapsed += CountTimer_Elapsed;
+        countTimer.Start();
+        isStarted = true;
+        PlayBtn.Text = "\u23F8"; // pause
+        PlayBtn.BackgroundColor = Colors.Yellow;
+    }
+
+    private void Reset()
+    {
+        if (int.TryParse(ResetEntry.Text,
+                        NumberStyles.Integer,
+                        null, out int newCount))
+        {
+            count = newCount;
+            SayNumber();
+        }
+    }
+
+    private void StopCounter()
+    {
+        countTimer.Elapsed -= CountTimer_Elapsed;
+        countTimer.Stop();
+        isStarted = false;
+        Interlocked.Exchange(ref steps, 0);
+        PlayBtn.Text = "\u23F5"; // play
+        PlayBtn.BackgroundColor = Colors.Green;
+    }
+
+    private void SayWelcome_Clicked(object sender, EventArgs e)
+    {
+        Welcome();
+    }
+
+    private void CountTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
+        Interlocked.Increment(ref count);
+        var builder = SayNumber(PromptBreak.Medium, false, false);
+        SayNumber(builder, PromptBreak.None, true, true);
+#if DEBUG
+        Interlocked.Increment(ref steps);
+        Debug.WriteLine($"Step {steps}, counter = {count}");
+#endif
+    }
+    
+    private void CustomEntry_Completed(object sender, EventArgs e)
+    {
+        SayText(CustomEntry.Text);
+    }
+
+    private void SayBtn_Clicked(object sender, EventArgs e)
+    {
+        SayText(CustomEntry.Text);
+    }
+
+
+    private void OnCounterClicked(object sender, EventArgs e)
+    {
+        SayNumber();
     }
 
     private void LessBtn_Clicked(object sender, EventArgs e)
@@ -212,7 +219,6 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         }
         else
         {
-            //SayNumber();
             count++;
             var builder = SayNumber(PromptBreak.Medium, false, false);
             SayNumber(builder, PromptBreak.None, true, true);
@@ -226,7 +232,6 @@ Appuyez sur les boutons pour écouter les chiffres en français",
 
         count = 0;
         SayNumber();
-        // TODO: Change UI to play
     }
 
     private void VoicesPck_SelectedIndexChanged(object sender, EventArgs e)
@@ -241,11 +246,6 @@ Appuyez sur les boutons pour écouter les chiffres en français",
             .First();
 
         synthesizer.SelectVoice(selectedVI.Name);
-    }
-
-    private void SayWelcome_Clicked(object sender, EventArgs e)
-    {
-        Welcome();
     }
 }
 
