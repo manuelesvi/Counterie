@@ -157,13 +157,17 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         //synthesizer.SpeakAsync(
         //    $"bouton cliqué {count} {veces}.");
         int presentCount = count; // pass a copy
+
+        string inWords = count.ToWords(selectedVI.Culture);
         Dispatcher.Dispatch(() => 
         {
-            NumberLbl.Text = count.ToWords(selectedVI.Culture); // humanized :D
-            CounterBtn.Text = $"{count}";
+            NumberLbl.Text = inWords; // humanized :D
+            CounterBtn.Text = $"{count.ToString("n0")}";
         });
 
-        builder.AppendTextWithHint(count.ToString(), SayAs.NumberOrdinal);
+        //builder.AppendTextWithHint(count.ToString(), SayAs.NumberOrdinal);
+        //builder.AppendBreak();
+        builder.AppendText(inWords);
         builder.AppendBreak(promptBreak);
         if (endVoice)
         {
