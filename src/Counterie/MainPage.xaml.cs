@@ -11,17 +11,22 @@ public partial class MainPage : ContentPage
     static int steps = 0;
     static readonly CultureInfo _frCI = CultureInfo.GetCultureInfo("fr-FR");
 
+    const int SayNumberTimeout_ms = 4250; // 4.25s
+
     int count = 0;
     bool isStarted;
     readonly SpeechSynthesizer synthesizer = new();
-    readonly Timer countTimer = new(4250); // 4.25s
+    readonly Timer countTimer = new(SayNumberTimeout_ms); 
+    Prompt promptToWatch;
+    Stopwatch stopWatch = new();
     VoiceInfo selectedVI;
 
     public MainPage()
     {
         InitializeComponent();
         LoadVoices();
-
+        synthesizer.SpeakStarted += Synthesizer_SpeakStarted;
+        synthesizer.SpeakCompleted += Synthesizer_SpeakCompleted;
         synthesizer.SpeakProgress += (s, e) =>
         {
             SpeakingLbl.Text = e.Text;
@@ -29,7 +34,7 @@ public partial class MainPage : ContentPage
 
         Loaded += (s, e) => Welcome();
     }
-    
+
     private void Welcome()
     {
         string message = selectedVI.Culture.TwoLetterISOLanguageName switch
@@ -104,7 +109,7 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         string inWords = count.ToWords(selectedVI.Culture);
         Dispatcher.Dispatch(() =>
         {
-            NumberLbl.Text = inWords; // humanized :D
+            NumberLbl.Text = count.ToString("n0"); // humanized :D
             CounterBtn.Text = $"{count.ToString("n0")}";
         });
 
@@ -118,14 +123,19 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         }
         if (sayIt)
         {
-            synthesizer.SpeakAsync(builder);
+            stopWatch.Stop();
+            countTimer.Interval = stopWatch.ElapsedMilliseconds > SayNumberTimeout_ms
+                ? stopWatch.ElapsedMilliseconds + 500
+                : SayNumberTimeout_ms;
+            //stopWatch.Reset();
+            promptToWatch = synthesizer.SpeakAsync(builder);
         }
 
         return builder;
     }
-
+    
     private void SayText(string text) => synthesizer.SpeakAsync(text);
-        
+
     private void StartCounter()
     {
         countTimer.Elapsed += CountTimer_Elapsed;
@@ -161,9 +171,26 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         Welcome();
     }
 
+    private void Synthesizer_SpeakStarted(object sender, SpeakStartedEventArgs e)
+    {
+        stopWatch.Restart();        
+    }
+
+    private void Synthesizer_SpeakCompleted(object sender, SpeakCompletedEventArgs e)
+    {
+        stopWatch.Stop();
+    }
+
     private void CountTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
     {
+        Debug.WriteLine($"{nameof(CountTimer_Elapsed)} started. Timer: {countTimer.Interval}");
         Interlocked.Increment(ref count);
+        Debug.WriteLine(stopWatch.Elapsed);
+        countTimer.Interval = (!stopWatch.IsRunning 
+            && stopWatch.ElapsedMilliseconds + 500 > SayNumberTimeout_ms) 
+                ? stopWatch.ElapsedMilliseconds + 500 
+                : SayNumberTimeout_ms;
+
         var builder = SayNumber(PromptBreak.Medium, false, false);
         SayNumber(builder, PromptBreak.None, true, true);
 #if DEBUG
@@ -171,7 +198,7 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         Debug.WriteLine($"Step {steps}, counter = {count}");
 #endif
     }
-    
+
     private void CustomEntry_Completed(object sender, EventArgs e)
     {
         SayText(CustomEntry.Text);
@@ -239,7 +266,7 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         var voices = synthesizer.GetInstalledVoices();
         string selectedV = VoicesPck.GetItemsAsArray()[VoicesPck.SelectedIndex];
         selectedV = selectedV.Substring(0, selectedV.IndexOf("[")).TrimEnd();
-        
+
         selectedVI = voices
             .Where(v => v.VoiceInfo.Name.Contains(selectedV))
             .Select(v => v.VoiceInfo)
