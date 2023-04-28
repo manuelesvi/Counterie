@@ -12,11 +12,11 @@ public partial class MainPage : ContentPage
     static readonly CultureInfo _frCI = CultureInfo.GetCultureInfo("fr-FR");
 
     const int SayNumberTimeout_ms = 4250; // 4.25s
-
-    int count = 0;
-    bool isStarted;
+    
     readonly SpeechSynthesizer synthesizer = new();
     readonly Timer countTimer = new(SayNumberTimeout_ms); 
+    int count = 0;
+    bool isStarted;
     Prompt promptToWatch;
     Stopwatch stopWatch = new();
     VoiceInfo selectedVI;
@@ -99,11 +99,7 @@ Appuyez sur les boutons pour écouter les chiffres en français",
         PromptBreak promptBreak = PromptBreak.Small,
         bool endVoice = true,
         bool sayIt = true)
-    {
-        //string veces = count > 1 ? "fois" : "fois";
-
-        //synthesizer.SpeakAsync(
-        //    $"bouton cliqué {count} {veces}.");
+    {        
         int presentCount = count; // pass a copy
 
         string inWords = count.ToWords(selectedVI.Culture);
@@ -112,9 +108,7 @@ Appuyez sur les boutons pour écouter les chiffres en français",
             NumberLbl.Text = count.ToString("n0"); // humanized :D
             CounterBtn.Text = $"{count.ToString("n0")}";
         });
-
-        //builder.AppendTextWithHint(count.ToString(), SayAs.NumberOrdinal);
-        //builder.AppendBreak();
+        
         builder.AppendText(inWords);
         builder.AppendBreak(promptBreak);
         if (endVoice)
@@ -127,7 +121,6 @@ Appuyez sur les boutons pour écouter les chiffres en français",
             countTimer.Interval = stopWatch.ElapsedMilliseconds > SayNumberTimeout_ms
                 ? stopWatch.ElapsedMilliseconds + 500
                 : SayNumberTimeout_ms;
-            //stopWatch.Reset();
             promptToWatch = synthesizer.SpeakAsync(builder);
         }
 
@@ -208,7 +201,6 @@ Appuyez sur les boutons pour écouter les chiffres en français",
     {
         SayText(CustomEntry.Text);
     }
-
 
     private void OnCounterClicked(object sender, EventArgs e)
     {
